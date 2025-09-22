@@ -1,6 +1,10 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('node:path')
+const fs = require('fs')
+
+// Import the streaming functionality
+const { streamWithFetch } = require('./fetch-streaming-client')
 
 function createWindow () {
   // Create the browser window.
@@ -8,7 +12,9 @@ function createWindow () {
     width: 800,
     height: 600,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
     }
   })
 
@@ -18,6 +24,15 @@ function createWindow () {
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
 }
+
+// Handle IPC communication for streaming
+ipcMain.handle('stream-with-fetch', async () => {
+  try {
+    return await streamWithFetch()
+  } catch (error) {
+    throw error
+  }
+})
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.

@@ -6,6 +6,14 @@
  *
  * https://www.electronjs.org/docs/latest/tutorial/sandbox
  */
+
+const { contextBridge, ipcRenderer } = require('electron');
+
+// Expose a safe API to the renderer process
+contextBridge.exposeInMainWorld('electronAPI', {
+  streamWithFetch: () => ipcRenderer.invoke('stream-with-fetch')
+});
+
 window.addEventListener('DOMContentLoaded', () => {
   const replaceText = (selector, text) => {
     const element = document.getElementById(selector)
