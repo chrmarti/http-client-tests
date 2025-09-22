@@ -1,0 +1,16 @@
+{
+  "name": "groovy-trade-praised-4yt1m",
+  "productName": "groovy-trade-praised-4yt1m",
+  "description": "My Electron application description",
+  "keywords": [],
+  "main": "./main.js",
+  "version": "1.0.0",
+  "author": "chrmarti",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "37.3.1"
+  }
+}
