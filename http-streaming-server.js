@@ -3,6 +3,7 @@ const https = require('https');
 const http2 = require('http2');
 const fs = require('fs');
 const path = require('path');
+const url = require('url');
 
 const HTTP_PORT = 3000;
 const HTTPS_PORT = 3443;
@@ -12,6 +13,10 @@ const HTTP2_PORT = 3444;
 function handleRequest(req, res) {
   const isHttp2 = req.httpVersion === '2.0';
 
+  // Parse query parameters
+  const parsedUrl = url.parse(req.url, true);
+  const queryChunks = parsedUrl.query.chunks;
+  
   const headers = {
     'Content-Type': 'text/plain'
   };
@@ -26,35 +31,25 @@ function handleRequest(req, res) {
   const protocol = isHttp2 ? 'HTTP/2' : `HTTP/${req.httpVersion}`;
   const message = `Hello, this is a ${protocol} streaming response! Each character appears with a delay. `;
   let index = 0;
-  let delay = 200; // Start with 200ms delay
-  let noDelayStartTime = null;
   const n = 1; // Number of characters to send at once
+  const totalChunks = queryChunks ? parseInt(queryChunks, 10) || 150000 : 150000;
+  let chunksSent = 0;
 
   const streamChunk = () => {
+    if (chunksSent >= totalChunks) {
+      res.end();
+      return;
+    }
+
     let chunk = '';
     for (let i = 0; i < n; i++) {
       chunk += message[index];
       index = (index + 1) % message.length; // Wrap around to repeat message
     }
     res.write(chunk);
+    chunksSent++;
 
-    if (delay > 0) {
-      // Decrease delay each time
-      delay = Math.max(0, delay - 5);
-      setTimeout(streamChunk, delay);
-    } else {
-      // Start tracking time when delay reaches 0
-      if (noDelayStartTime === null) {
-        noDelayStartTime = Date.now();
-      }
-
-      // Continue for 5 seconds after delay reaches 0
-      if (Date.now() - noDelayStartTime < 5000) {
-        setImmediate(streamChunk); // Stream as fast as possible
-      } else {
-        res.end();
-      }
-    }
+    setImmediate(streamChunk); // Stream as fast as possible
   };
 
   streamChunk();

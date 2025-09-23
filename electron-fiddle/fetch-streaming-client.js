@@ -4,6 +4,10 @@ const { Agent } = require('undici');
 
 const useHttp2 = true;
 const useElectronFetch = true;
+const ttfbMeasurement = false;
+
+const numberOfRequests = ttfbMeasurement ? 1000 : 1;
+const chunksPerRequest = ttfbMeasurement ? 10 : undefined;
 
 const HTTPS_PORT = 3443;
 const HTTP2_PORT = 3444;
@@ -16,7 +20,7 @@ const port = useHttp2 ? HTTP2_PORT : HTTPS_PORT;
 // Create a custom undici agent with the certificate
 const agent = new Agent({
   connect: {
-    ca: fs.readFileSync(path.join('/Users/chrmarti/Development/repos/http-client-tests', 'server_localhost_crt.pem'))
+    ca: fs.readFileSync('../server_localhost_crt.pem')
   },
   allowH2: useHttp2
 });
@@ -29,29 +33,44 @@ async function streamWithFetch() {
       ? {} 
       : { dispatcher: agent };
     
-    const response = await fetchImpl(`https://localhost:${port}`, fetchOptions);
-
-    console.log(`Status: ${response.status}`);
-    console.log('Headers:', Object.fromEntries(response.headers));
-    console.log('\nStreaming response:');
+    const url = chunksPerRequest !== undefined 
+      ? `https://localhost:${port}?chunks=${chunksPerRequest}`
+      : `https://localhost:${port}`;
 
     const stats = {
       useElectronFetch,
       useHttp2,
+      chunks: {},
+      ttfb: {},
     };
-    const reader = response.body.getReader();
 
-    while (true) {
-      const { done, value } = await reader.read();
+    for (let i = 0; i < numberOfRequests; i++) {
+      const start = Date.now();
+      const response = await fetchImpl(url, fetchOptions);
 
-      if (done) break;
+      if ((i + 1) % 100 === 0) {
+        console.log(`Run ${i + 1}: Status: ${response.status}`);
+        // console.log('Headers:', Object.fromEntries(response.headers));
+      }
 
-      stats[value.length] = (stats[value.length] || 0) + 1;
-      // process.stdout.write(new TextDecoder().decode(value));
+      const reader = response.body.getReader();
+
+      let firstByteSeen = false;
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        stats.chunks[value.length] = (stats.chunks[value.length] || 0) + 1;
+        if (!firstByteSeen) {
+          const time = Date.now() - start;
+          stats.ttfb[time] = (stats.ttfb[time] || 0) + 1;
+          firstByteSeen = true;
+        }
+      }
     }
 
     console.log(`Response stats: ${JSON.stringify(stats, null, 2)}`);
-    console.log('\n\nStream ended.');
     return stats;
 
   } catch (err) {

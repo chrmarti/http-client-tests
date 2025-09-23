@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     try {
       const stats = await window.electronAPI.streamWithFetch();
-      replaceText('fetch-streaming-client', `Fetch stats (chuck length -> count): ${JSON.stringify(stats, null, 2)}`);
+      replaceText('fetch-streaming-client', `Fetch stats (chunk length -> count): ${JSON.stringify(stats, null, 2)}`);
     } catch (err) {
       replaceText('fetch-streaming-client', `Fetch error: ${err}`);
     }
