@@ -10,6 +10,7 @@
     "start": "electron ."
   },
   "dependencies": {
+    "@adobe/helix-fetch": "github:devm33/helix-fetch#2a08fa939591a0e14f34f611adcc3ed767579e9a",
     "undici": "^6.0.0"
   },
   "devDependencies": {

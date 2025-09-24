@@ -49,7 +49,11 @@ function handleRequest(req, res) {
     res.write(chunk);
     chunksSent++;
 
-    setImmediate(streamChunk); // Stream as fast as possible
+    if (chunksSent < 100) {
+      setTimeout(streamChunk, 1); // Initial slow start
+    } else {
+      setImmediate(streamChunk); // Stream as fast as possible
+    }
   };
 
   streamChunk();
