@@ -31,14 +31,14 @@ const port = useHttp2 ? HTTP2_PORT : HTTPS_PORT;
 // Create a custom undici agent with the certificate
 const agent = new Agent({
   connect: {
-    ca: fs.readFileSync('../server_localhost_crt.pem')
+    ca: fs.readFileSync(path.join(__dirname, 'server_localhost_crt.pem'))
   },
   allowH2: useHttp2
 });
 
 // Create Helix fetch context with SSL certificate
 const helixContext = helixFetch.context({
-  ca: fs.readFileSync('../server_localhost_crt.pem'),
+  ca: fs.readFileSync(path.join(__dirname, 'server_localhost_crt.pem')),
 });
 
 async function streamWithFetch() {

@@ -4,7 +4,7 @@ const path = require('node:path')
 const fs = require('fs')
 
 // Import the streaming functionality
-const { streamWithFetch } = require('./fetch-streaming-client')
+const { streamWithFetch } = require('../fetch-streaming-client')
 
 function createWindow () {
   // Create the browser window.
